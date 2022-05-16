@@ -1,12 +1,11 @@
+#include "voice.h"
+#include "inlines.h"
+
+#include <QMenu>
 #include <QTimer>
 #include <QPainter>
-#include <QPaintEvent>
-#include <QMenu>
 #include <math.h>
-#include <stdlib.h>
-
-#include "inlines.h"
-#include "voice.h"
+#include <qmmp/qmmp.h>
 
 Voice::Voice(QWidget *parent)
     : Visual(parent)
@@ -18,9 +17,9 @@ Voice::Voice(QWidget *parent)
     m_timer->setInterval(40);
     connect(m_timer, SIGNAL(timeout()), SLOT(updateVisual()));
 
-    m_screenAction = new QAction(tr("Fullscreen"), this);
-    m_screenAction->setCheckable(true);
-    connect(m_screenAction, SIGNAL(triggered(bool)), this, SLOT(setFullScreen(bool)));
+    m_channelsAction = new QAction(tr("Double Channels"), this);
+    m_channelsAction->setCheckable(true);
+    connect(m_channelsAction, SIGNAL(triggered(bool)), this, SLOT(setChannelMode()));
 }
 
 Voice::~Voice()
@@ -30,9 +29,9 @@ Voice::~Voice()
         delete[] m_intern_vis_data;
     }
 
-    if(m_x_scale)
+    if(m_xscale)
     {
-        delete[] m_x_scale;
+        delete[] m_xscale;
     }
 }
 void Voice::start()
@@ -69,12 +68,9 @@ void Voice::updateVisual()
     }
 }
 
-void Voice::setFullScreen(bool yes)
+void Voice::setChannelMode()
 {
-    if(yes)
-        setWindowState(windowState() | Qt::WindowFullScreen);
-    else
-        setWindowState(windowState() & ~Qt::WindowFullScreen);
+    initialize();
 }
 
 void Voice::hideEvent(QHideEvent *)
@@ -87,17 +83,49 @@ void Voice::showEvent(QShowEvent *)
     m_timer->start();
 }
 
-void Voice::paintEvent(QPaintEvent *e)
+void Voice::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
-    painter.fillRect(e->rect(), Qt::black);
-    draw(&painter);
+    painter.fillRect(rect(), Qt::black);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
+    const bool showTwoChannels = m_channelsAction->isChecked();
+
+    for(int i = 1; i < m_rows; ++i)
+    {
+        if(m_offset >= m_cols)
+        {
+            m_offset = m_cols - 1;
+            m_backgroundImage = m_backgroundImage.copy(1, 0, m_cols, m_rows);
+        }
+
+        if(!showTwoChannels)
+        {
+            const double left = qBound(0, m_intern_vis_data[i - 1] / 2, 255) / 255.0;
+            m_backgroundImage.setPixel(m_offset, m_rows - i, VisualPalette::renderPalette(m_palette, left));
+        }
+        else
+        {
+            const double left = qBound(0, m_intern_vis_data[i - 1] / 2, 255) / 255.0;
+            m_backgroundImage.setPixel(m_offset, (m_rows - i) / 2, VisualPalette::renderPalette(m_palette, left));
+
+            const double right = qBound(0, m_intern_vis_data[m_rows + i - 1] / 2, 255) / 255.0;
+            m_backgroundImage.setPixel(m_offset, (2 * m_rows - i) / 2, VisualPalette::renderPalette(m_palette, right));
+        }
+    }
+
+    ++m_offset;
+    if(!m_backgroundImage.isNull())
+    {
+        painter.drawImage(0, 0, m_backgroundImage);
+    }
 }
 
-void Voice::contextMenuEvent(QContextMenuEvent *e)
+void Voice::contextMenuEvent(QContextMenuEvent *)
 {
-    Visual::contextMenuEvent(e);
     QMenu menu(this);
+    menu.addAction(m_channelsAction);
+
     QMenu typeMenu(tr("Type"), &menu);
     typeMenu.addAction(tr("Spectrum"))->setData(10);
     typeMenu.addAction(tr("Spectrogram"))->setData(20);
@@ -108,7 +136,7 @@ void Voice::contextMenuEvent(QContextMenuEvent *e)
     menu.exec(QCursor::pos());
 }
 
-void Voice::process(float *left, float *)
+void Voice::process(float *left, float *right)
 {
     const int rows = height();
     const int cols = width();
@@ -123,77 +151,70 @@ void Voice::process(float *left, float *)
             delete[] m_intern_vis_data;
         }
 
-        if(m_x_scale)
+        if(m_xscale)
         {
-            delete[] m_x_scale;
+            delete[] m_xscale;
         }
 
-        m_intern_vis_data = new int[m_rows]{0};
-        m_x_scale = new int[m_rows + 1]{0};
+        m_intern_vis_data = new int[m_rows * 2]{0};
+        m_xscale = new int[m_rows + 1]{0};
 
         initialize();
 
         for(int i = 0; i < m_rows + 1; ++i)
         {
-            m_x_scale[i] = pow(pow(255.0, 1.0 / m_rows), i);
+            m_xscale[i] = pow(pow(255.0, 1.0 / m_rows), i);
         }
     }
 
-    short dest[256];
-    short y;
-    int k, magnitude;
+    short dest_l[256];
+    short dest_r[256];
 
-    calc_freq(dest, left);
+    calc_freq(dest_l, left);
+    calc_freq(dest_r, right);
+
     double y_scale = (double) 1.25 * m_cols / log(256);
 
-    for(int i = 0; i < m_rows; i++)
+    for(int i = 0; i < m_rows; ++i)
     {
-        y = 0;
-        magnitude = 0;
+        short yl = 0;
+        short yr = 0;
+        int magnitude_l = 0;
+        int magnitude_r = 0;
 
-        if(m_x_scale[i] == m_x_scale[i + 1])
+        if(m_xscale[i] == m_xscale[i + 1])
         {
-            y = dest[i];
+            yl = dest_l[i];
+            yr = dest_r[i];
         }
 
-        for(k = m_x_scale[i]; k < m_x_scale[i + 1]; k++)
+        for(int k = m_xscale[i]; k < m_xscale[i + 1]; ++k)
         {
-            y = qMax(dest[k], y);
+            yl = qMax(dest_l[k], yl);
+            yr = qMax(dest_r[k], yr);
         }
 
-        y >>= 7; //256
+        yl >>= 7; //256
+        yr >>= 7;
 
-        if(y)
+        if(yl)
         {
-            magnitude = int(log(y) * y_scale);
-            magnitude = qBound(0, magnitude, m_cols);
+            magnitude_l = int(log(yl) * y_scale);
+            magnitude_l = qBound(0, magnitude_l, m_cols);
         }
 
-        m_intern_vis_data[i] -= m_analyzer_falloff * m_cols / 15;
-        m_intern_vis_data[i] = magnitude > m_intern_vis_data[i] ? magnitude : m_intern_vis_data[i];
-    }
-}
-
-void Voice::draw(QPainter *p)
-{
-    p->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-
-    for(int j = 1; j < m_rows; ++j)
-    {
-        if(m_pixPos >= m_cols)
+        if(yr)
         {
-            m_pixPos = m_cols - 1;
-            m_backgroundImage = m_backgroundImage.copy(1, 0, m_cols, m_rows);
+            magnitude_r = int(log(yr) * y_scale);
+            magnitude_r = qBound(0, magnitude_r, m_cols);
         }
 
-        const double level = qBound(0, m_intern_vis_data[j - 1] / 2, 255) / 255.0;
-        m_backgroundImage.setPixel(m_pixPos, m_rows - j, VisualPalette::renderPalette(m_palette, level));
-    }
+        m_intern_vis_data[i] -= m_analyzerSize * m_cols / 15;
+        m_intern_vis_data[i] = magnitude_l > m_intern_vis_data[i] ? magnitude_l : m_intern_vis_data[i];
 
-    ++m_pixPos;
-    if(!m_backgroundImage.isNull())
-    {
-        p->drawImage(0, 0, m_backgroundImage);
+        const int j = m_rows + i;
+        m_intern_vis_data[j] -= m_analyzerSize * m_cols / 15;
+        m_intern_vis_data[j] = magnitude_r > m_intern_vis_data[j] ? magnitude_r : m_intern_vis_data[j];
     }
 }
 
@@ -201,7 +222,7 @@ void Voice::initialize()
 {
     if(m_rows != 0 && m_cols != 0)
     {
-        m_pixPos = 0;
+        m_offset = 0;
         m_backgroundImage = QImage(m_cols, m_rows, QImage::Format_RGB32);
         m_backgroundImage.fill(Qt::black);
     }

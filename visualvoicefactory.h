@@ -21,7 +21,6 @@
 
 #include <QObject>
 #include <qmmp/visualfactory.h>
-#include <qmmp/visual.h>
 
 /*!
  * @author Greedysky <greedysky@163.com>
@@ -32,11 +31,11 @@ class VisualVoiceFactory : public QObject, public VisualFactory
     Q_PLUGIN_METADATA(IID "org.qmmp.qmmp.VisualFactoryInterface.1.0")
     Q_INTERFACES(VisualFactory)
 public:
-    virtual VisualProperties properties() const override;
-    virtual Visual *create(QWidget *parent) override;
-    virtual QDialog *createConfigDialog(QWidget *parent) override;
-    virtual void showAbout(QWidget *parent) override;
-    virtual QString translation() const override;
+    virtual VisualProperties properties() const override final;
+    virtual Visual *create(QWidget *parent) override final;
+    virtual QDialog *createConfigDialog(QWidget *parent) override final;
+    virtual void showAbout(QWidget *parent) override final;
+    virtual QString translation() const override final;
 
 };
 

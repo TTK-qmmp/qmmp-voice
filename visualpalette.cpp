@@ -20,7 +20,7 @@ static QVector<QColor> globalGolors = { QColor(0, 0, 0),
 void createGradientTable()
 {
     int numbers = 6;
-    for(int i = 0; i < GRADIENT_TABLE_SIZE; i++)
+    for(int i = 0; i < GRADIENT_TABLE_SIZE; ++i)
     {
         double position = (double)i/GRADIENT_TABLE_SIZE;
         /* if position > 1 then we have repetition of colors it maybe useful    */
@@ -175,16 +175,11 @@ uint32_t renderPalette(Palette palette, double level)
 {
     switch(palette)
     {
-    case PALETTE_SPECTRUM:
-        return spectrum(level);
-    case PALETTE_SPECTROGRAM:
-        return spectrogram(level);
-    case PALETTE_SOX:
-        return sox(level);
-    case PALETTE_MONO:
-        return mono(level);
-    default:
-        return 0;
+    case PALETTE_SPECTRUM: return spectrum(level);
+    case PALETTE_SPECTROGRAM: return spectrogram(level);
+    case PALETTE_SOX: return sox(level);
+    case PALETTE_MONO: return mono(level);
+    default: return 0;
     }
 }
 }

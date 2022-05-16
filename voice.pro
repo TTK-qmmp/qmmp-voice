@@ -1,5 +1,5 @@
-include(../../plugins.pri)
-include(common/common.pri)
+include($$PWD/../../plugins.pri)
+include($$PWD/common/common.pri)
 
 TARGET = $$PLUGINS_PREFIX/Visual/voice
 

@@ -33,35 +33,34 @@ public:
     virtual ~Voice();
 
 public slots:
-    virtual void start() override;
-    virtual void stop() override;
+    virtual void start() override final;
+    virtual void stop() override final;
 
 private slots:
     void typeChanged(QAction *action);
     void updateVisual();
-    void setFullScreen(bool yes);
+    void setChannelMode();
 
 private:
-    virtual void hideEvent(QHideEvent *e) override;
-    virtual void showEvent(QShowEvent *e) override;
-    virtual void paintEvent(QPaintEvent *) override;
-    virtual void contextMenuEvent(QContextMenuEvent *e) override;
+    virtual void hideEvent(QHideEvent *e) override final;
+    virtual void showEvent(QShowEvent *e) override final;
+    virtual void paintEvent(QPaintEvent *) override final;
+    virtual void contextMenuEvent(QContextMenuEvent *e) override final;
 
     void process(float *left, float *right);
-    void draw(QPainter *p);
     void initialize();
 
     VisualPalette::Palette m_palette= VisualPalette::PALETTE_DEFAULT;
     QImage m_backgroundImage;
-    int m_pixPos = 0;
-    int *m_x_scale = nullptr;
-    double m_analyzer_falloff = 2.2;
+    int m_offset = 0;
+    int *m_xscale = nullptr;
+    const double m_analyzerSize = 2.2;
     QTimer *m_timer = nullptr;
     int m_rows = 0, m_cols = 0;
     int *m_intern_vis_data = nullptr;
     float m_left[QMMP_VISUAL_NODE_SIZE];
     float m_right[QMMP_VISUAL_NODE_SIZE];
-    QAction *m_screenAction = nullptr;
+    QAction *m_channelsAction = nullptr;
 
 };
 
