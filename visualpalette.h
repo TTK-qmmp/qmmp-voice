@@ -19,7 +19,7 @@
 #ifndef VISUALPALETTE_H
 #define VISUALPALETTE_H
 
-#include "qmmp_export.h"
+#include <qmmp/qmmp_export.h>
 
 namespace VisualPalette {
 typedef enum palette
