@@ -34,6 +34,7 @@ Voice::~Voice()
         delete[] m_xscale;
     }
 }
+
 void Voice::start()
 {
     if(isVisible())
