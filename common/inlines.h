@@ -1,4 +1,4 @@
-// Copyright (c) 2000-2001 Brad Hughes <bhughes@trolltech.com>
+// Copyright (C) 2000-2001 Brad Hughes <bhughes@trolltech.com>
 //
 // Use, modification and distribution is allowed without limitation,
 // warranty, or liability of any kind.
@@ -30,7 +30,7 @@ static inline void calc_freq(short* dest, float *src)
 
     fft_perform(src, tmp_out, state);
 
-    for(i = 0; i < 256; i++)
+    for(i = 0; i < 256; ++i)
     {
         dest[i] = ((int) sqrt(tmp_out[i + 1])) >> 8;
     }
@@ -80,4 +80,4 @@ static inline void mono_from_multichannel(float *l,
     }
 }
 
-#endif // INLINES_H
+#endif

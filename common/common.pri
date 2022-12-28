@@ -1,9 +1,6 @@
+INCLUDEPATH += $$PWD
 
-INCLUDEPATH += $$PWD/
-
-HEADERS += \
-           $$PWD/fft.h \
+HEADERS += $$PWD/fft.h \
            $$PWD/inlines.h
            
-SOURCES += \
-           $$PWD/fft.c
+SOURCES += $$PWD/fft.c
