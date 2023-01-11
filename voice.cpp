@@ -38,7 +38,9 @@ Voice::~Voice()
 void Voice::start()
 {
     if(isVisible())
+    {
         m_timer->start();
+    }
 }
 
 void Voice::stop()
