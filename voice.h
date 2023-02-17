@@ -38,6 +38,7 @@ public slots:
 
 private slots:
     void typeChanged(QAction *action);
+	void rangeChanged(QAction *action);
     void updateVisual();
     void setChannelMode();
 
@@ -62,6 +63,7 @@ private:
     float m_left[QMMP_VISUAL_NODE_SIZE];
     float m_right[QMMP_VISUAL_NODE_SIZE];
     QAction *m_channelsAction = nullptr;
+    int m_rangeValue = 30;
 
 };
 
