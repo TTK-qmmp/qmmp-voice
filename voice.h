@@ -48,6 +48,7 @@ private:
     virtual void contextMenuEvent(QContextMenuEvent *e) override final;
 
     void process(float *left, float *right);
+    void createPalette(int row);
     void initialize();
 
     VisualPalette::Palette m_palette= VisualPalette::PALETTE_DEFAULT;
