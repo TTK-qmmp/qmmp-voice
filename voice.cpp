@@ -15,10 +15,7 @@ Voice::Voice(QWidget *parent)
 {
     setWindowTitle(tr("Voice Widget"));
     setMinimumSize(2 * 300 - 30, 105);
-	
-    m_rows = MIN_ROW;
-    m_cols = MIN_COLUMN;
-	
+
     m_timer = new QTimer(this);
     m_timer->setInterval(40);
     connect(m_timer, SIGNAL(timeout()), SLOT(updateVisual()));
@@ -222,6 +219,7 @@ void Voice::process(float *left, float *right)
 void Voice::createPalette(int row)
 {
     m_rows = row;
+    m_cols = MIN_COLUMN;
 
     if(m_intern_vis_data)
     {
