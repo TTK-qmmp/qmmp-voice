@@ -38,7 +38,7 @@ public slots:
 
 private slots:
     void typeChanged(QAction *action);
-	void rangeChanged(QAction *action);
+    void rangeChanged(QAction *action);
     void updateVisual();
     void setChannelMode();
 
