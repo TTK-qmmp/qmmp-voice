@@ -17,12 +17,12 @@ static QVector<QColor> globalGolors = { QColor(0, 0, 0),
                                         QColor(255, 0, 0)
                                       };
 
-void createGradientTable()
+static void createGradientTable()
 {
-    int numbers = 6;
+    constexpr int numbers = 6;
     for(int i = 0; i < GRADIENT_TABLE_SIZE; ++i)
     {
-        double position = (double)i/GRADIENT_TABLE_SIZE;
+        double position = (double)i / GRADIENT_TABLE_SIZE;
         /* if position > 1 then we have repetition of colors it maybe useful    */
         if(position > 1.0)
         {
@@ -62,7 +62,7 @@ void createGradientTable()
 
 // Modified version of Dan Bruton's algorithm:
 // http://www.physics.sfasu.edu/astro/color/spectra.html
-uint32_t spectrum(double level)
+static uint32_t spectrum(double level)
 {
     level *= 0.6625;
     double r = 0.0, g = 0.0, b = 0.0;
@@ -106,26 +106,49 @@ uint32_t spectrum(double level)
     cf *= 255.0;
 
     // Pack RGB values into a 32-bit uint.
-    uint32_t rr = (uint32_t) (r * cf + 0.5);
-    uint32_t gg = (uint32_t) (g * cf + 0.5);
-    uint32_t bb = (uint32_t) (b * cf + 0.5);
+    const uint32_t rr = (uint32_t) (r * cf + 0.5);
+    const uint32_t gg = (uint32_t) (g * cf + 0.5);
+    const uint32_t bb = (uint32_t) (b * cf + 0.5);
     return (rr << 16) + (gg << 8) + bb;
 }
 
-uint32_t spectrogram(double level)
+static uint32_t rainbow(double level)
 {
     if(!globalTableInit)
     {
         createGradientTable();
         globalTableInit = true;
     }
-    
+
     const int index = qBound(0, int(level * GRADIENT_TABLE_SIZE), GRADIENT_TABLE_SIZE - 1);
     return globalTableGolors[index];
 }
 
+static uint32_t perceptual(double level)
+{
+    float R, G, B, I, H, S, key = 1.5;
+    level *= 256;
+    I = level;
+    H = M_PI * 2 * level / 256;
+
+    (level <= 127) ? S = key * level : S = key * (256 - level);
+
+    R = I - S * cos(H) * 0.201424 + S * sin(H) * 0.612372;
+    G = I - S * cos(H) * 0.201424 - S * sin(H) * 0.612372;
+    B = I + S * cos(H) * 0.402848 + S * sin(H) * 0.0;
+
+    if(R < 0) R = 0; else if(R >= 256) R = 255;
+    if(G < 0) G = 0; else if(G >= 256) G = 255;
+    if(B < 0) B = 0; else if(B >= 256) B = 255;
+
+    const uint32_t rr = (uint32_t) (R);
+    const uint32_t gg = (uint32_t) (G);
+    const uint32_t bb = (uint32_t) (B);
+    return (rr << 16) + (gg << 8) + bb;
+}
+
 // The default palette used by SoX and written by Rob Sykes.
-uint32_t sox(double level)
+static uint32_t sox(double level)
 {
     double r = 0.0;
     if(level >= 0.13 && level < 0.73)
@@ -158,15 +181,15 @@ uint32_t sox(double level)
     }
 
     // Pack RGB values into a 32-bit uint.
-    uint32_t rr = (uint32_t) (r * 255.0 + 0.5);
-    uint32_t gg = (uint32_t) (g * 255.0 + 0.5);
-    uint32_t bb = (uint32_t) (b * 255.0 + 0.5);
+    const uint32_t rr = (uint32_t) (r * 255.0 + 0.5);
+    const uint32_t gg = (uint32_t) (g * 255.0 + 0.5);
+    const uint32_t bb = (uint32_t) (b * 255.0 + 0.5);
     return (rr << 16) + (gg << 8) + bb;
 }
 
-uint32_t mono(double level)
+static uint32_t mono(double level)
 {
-    uint32_t v = (uint32_t) (level * 255.0 + 0.5);
+    const uint32_t v = (uint32_t) (level * 255.0 + 0.5);
     return (v << 16) + (v << 8) + v;
 }
 
@@ -176,7 +199,8 @@ uint32_t renderPalette(Palette palette, double level)
     switch(palette)
     {
     case PALETTE_SPECTRUM: return spectrum(level);
-    case PALETTE_SPECTROGRAM: return spectrogram(level);
+    case PALETTE_RAINBOW: return rainbow(level);
+    case PALETTE_PERCEPTUAL: return perceptual(level);
     case PALETTE_SOX: return sox(level);
     case PALETTE_MONO: return mono(level);
     default: return 0;

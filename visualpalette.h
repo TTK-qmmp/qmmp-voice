@@ -22,14 +22,16 @@
 #include <qmmp/qmmp_export.h>
 
 namespace VisualPalette {
-typedef enum palette
+enum Palette
 {
     PALETTE_SPECTRUM,
-    PALETTE_SPECTROGRAM,
+    PALETTE_RAINBOW,
+    PALETTE_PERCEPTUAL,
     PALETTE_SOX,
     PALETTE_MONO,
-    PALETTE_DEFAULT = PALETTE_SPECTROGRAM,
-} Palette;
+    PALETTE_COUNT,
+    PALETTE_DEFAULT = PALETTE_RAINBOW,
+};
 
 /*!
 * Returns visual render palette by type.
