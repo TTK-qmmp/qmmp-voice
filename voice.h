@@ -22,6 +22,9 @@
 #include <qmmp/visual.h>
 #include "visualpalette.h"
 
+class QMenu;
+class QActionGroup;
+
 /*!
  * @author Greedysky <greedysky@163.com>
  */
@@ -37,10 +40,9 @@ public slots:
     virtual void stop() override final;
 
 private slots:
-    void typeChanged(QAction *action);
-    void rangeChanged(QAction *action);
+    void readSettings();
+    void writeSettings();
     void updateVisual();
-    void setChannelMode();
 
 private:
     virtual void hideEvent(QHideEvent *e) override final;
@@ -49,6 +51,7 @@ private:
     virtual void contextMenuEvent(QContextMenuEvent *e) override final;
 
     void process(float *left, float *right);
+    void createMenu();
     void createPalette(int row);
     void initialize();
 
@@ -59,11 +62,14 @@ private:
     const double m_analyzerSize = 2.2;
     QTimer *m_timer = nullptr;
     int m_rows = 0, m_cols = 0;
-    int *m_intern_vis_data = nullptr;
+    int *m_visualData = nullptr;
     float m_left[QMMP_VISUAL_NODE_SIZE];
     float m_right[QMMP_VISUAL_NODE_SIZE];
-    QAction *m_channelsAction = nullptr;
     int m_rangeValue = 30;
+
+    QMenu *m_menu;
+    QAction *m_channelsAction;
+    QActionGroup *m_typeActions, *m_rangeActions;
 
 };
 
