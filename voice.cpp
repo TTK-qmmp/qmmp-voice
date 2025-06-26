@@ -291,12 +291,9 @@ void Voice::createPalette(int row)
     for(int i = 0; i < m_rows + 1; ++i)
     {
         m_xscale[i] = pow(255.0, float(i) / m_rows);
-        if(i > 0)
+        if(i > 0 && m_xscale[i - 1] >= m_xscale[i]) //avoid several bars in a row with the same frequency
         {
-            if(m_xscale[i - 1] >= m_xscale[i]) //avoid several bars in a row with the same frequency
-            {
-                m_xscale[i] = qMin(m_xscale[i - 1] + 1, m_rows);
-            }
+            m_xscale[i] = qMin(m_xscale[i - 1] + 1, m_rows);
         }
     }
 }
