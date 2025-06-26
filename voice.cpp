@@ -189,7 +189,7 @@ void Voice::process(float *left, float *right)
     calc_freq(destl, left);
     calc_freq(destr, right);
 
-    double yscale = (double)1.25 * m_cols / log(256);
+    const double yscale = (double)1.25 * m_cols / log(256);
 
     for(int i = 0; i < m_rows; ++i)
     {
@@ -198,29 +198,24 @@ void Voice::process(float *left, float *right)
 
         if(m_xscale[i] == m_xscale[i + 1])
         {
-            yl = destl[i];
-            yr = destr[i];
+            yl = destl[i] >> 7; //128
+            yr = destr[i] >> 7; //128
         }
 
         for(int k = m_xscale[i]; k < m_xscale[i + 1]; ++k)
         {
-            yl = qMax(destl[k], yl);
-            yr = qMax(destr[k], yr);
+            yl = qMax(short(destl[k] >> 7), yl);
+            yr = qMax(short(destr[k] >> 7), yr);
         }
 
-        yl >>= 7; //256
-        yr >>= 7;
-
-        if(yl)
+        if(yl > 0)
         {
-            magnitudel = int(log(yl) * yscale);
-            magnitudel = qBound(0, magnitudel, m_cols);
+            magnitudel = qBound(0, int(log(yl) * yscale), m_cols);
         }
 
-        if(yr)
+        if(yr > 0)
         {
-            magnituder = int(log(yr) * yscale);
-            magnituder = qBound(0, magnituder, m_cols);
+            magnituder = qBound(0, int(log(yr) * yscale), m_cols);
         }
 
         m_visualData[i] -= m_analyzerSize * m_cols / 15;
@@ -295,7 +290,14 @@ void Voice::createPalette(int row)
 
     for(int i = 0; i < m_rows + 1; ++i)
     {
-        m_xscale[i] = pow(pow(255.0, 1.0 / m_rows), i);
+        m_xscale[i] = pow(255.0, float(i) / m_rows);
+        if(i > 0)
+        {
+            if(m_xscale[i - 1] >= m_xscale[i]) //avoid several bars in a row with the same frequency
+            {
+                m_xscale[i] = qMin(m_xscale[i - 1] + 1, m_rows);
+            }
+        }
     }
 }
 
