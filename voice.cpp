@@ -199,14 +199,14 @@ void Voice::process(float *left, float *right)
 
         if(m_xscale[i] == m_xscale[i + 1])
         {
-            yl = destl[i] >> 7; //128
-            yr = destr[i] >> 7; //128
+            yl = (i >= 256 ? 0 : (destl[i] >> 7)); //128
+            yr = (i >= 256 ? 0 : (destr[i] >> 7)); //128
         }
 
         for(int k = m_xscale[i]; k < m_xscale[i + 1]; ++k)
         {
-            yl = qMax(short(destl[k] >> 7), yl);
-            yr = qMax(short(destr[k] >> 7), yr);
+            yl = (k >= 256 ? 0 : qMax(short(destl[k] >> 7), yl));
+            yr = (k >= 256 ? 0 : qMax(short(destr[k] >> 7), yl));
         }
 
         if(yl > 0)
@@ -292,10 +292,6 @@ void Voice::createPalette(int row)
     for(int i = 0; i < m_rows + 1; ++i)
     {
         m_xscale[i] = pow(255.0, float(i) / m_rows);
-        if(i > 0 && m_xscale[i - 1] >= m_xscale[i]) //avoid several bars in a row with the same frequency
-        {
-            m_xscale[i] = qMin(m_xscale[i - 1] + 1, m_rows);
-        }
     }
 }
 
