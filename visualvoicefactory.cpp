@@ -31,7 +31,6 @@ void VisualVoiceFactory::showAbout(QWidget *parent)
 {
     QMessageBox::about(parent, tr("About Voice Visual Plugin"),
                        tr("Qmmp Voice Visual Plugin") + "\n" +
-                       tr("This plugin adds Voice visualization") + "\n" +
                        tr("Written by: Greedysky <greedysky@163.com>"));
 }
 
