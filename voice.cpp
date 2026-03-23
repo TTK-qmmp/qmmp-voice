@@ -12,6 +12,27 @@
 #define MIN_ROW     270
 #define MIN_COLUMN  300
 
+static void adjustMenuPosition(QMenu *menu)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5,12,0)
+    QPixmap pix(15, 15);
+    pix.fill(Qt::transparent);
+
+    const QList<QAction*> actions(menu->actions());
+    if(!actions.empty())
+    {
+        QAction* action(actions.first());
+        if(action->icon().isNull())
+        {
+            action->setIcon(pix);
+        }
+    }
+#else
+    Q_UNUSED(menu);
+#endif
+}
+
+
 Voice::Voice(QWidget *parent)
     : Visual(parent)
 {
@@ -276,6 +297,10 @@ void Voice::createMenu()
         act->setCheckable(true);
         rangeMenu->addAction(act);
     }
+
+    adjustMenuPosition(m_menu);
+    adjustMenuPosition(typeMenu);
+    adjustMenuPosition(rangeMenu);
 }
 
 void Voice::createPalette(int row)
